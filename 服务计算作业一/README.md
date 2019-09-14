@@ -1,2 +1,2 @@
-·şÎñ¼ÆËã×÷ÒµÒ»:VMware´î½¨Ë½ÓĞÔÆ×ÀÃæ
-²©¿ÍµØÖ·£ºhttps://blog.csdn.net/luji17343080/article/details/100184395
+## æœåŠ¡è®¡ç®—ä½œä¸šä¸€:VMwareæ­å»ºç§æœ‰äº‘æ¡Œé¢  
+åšå®¢åœ°å€ï¼šhttps://blog.csdn.net/luji17343080/article/details/100184395
