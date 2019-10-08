@@ -44,8 +44,7 @@ Linux命令行使用程序 - selpg，全称select page，selpg允许用户从源
 ### 3、命令行参数解析
 **parseArgs函数用pflag包对命令行参数进行解析，通过pflag包中的IntVarP、BoolVarP、StringVarP函数将参数中的标志初始化为相应的变量类型，最后通过Parse()函数将参数解析出来**  
   
-
-    ![](images/2.png)  
+![](images/2.png)  
 
 ### 4、命令行参数检查  
 - 检查参数的长度（不能小于3）  
