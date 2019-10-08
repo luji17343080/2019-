@@ -87,7 +87,7 @@ Linux命令行使用程序 - selpg，全称select page，selpg允许用户从源
 ### 6、main函数  
 **按步骤执行selpg**  
   
-    ![](images/main.png)  
+![](images/main.png)  
   
 ## 程序测试  
 **说明：in.txt为输入文件，out.txt为模拟打印机输出文件（初始为空），error.txt为报错信息（初始为空）。上面文件都放在与selpg.go同一目录下的TestFile文件夹中.初始的分页行数为10行。**  
