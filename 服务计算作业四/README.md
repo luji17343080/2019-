@@ -171,4 +171,6 @@ main.go调用了**agenda/cmd/root.go**中的Execute()函数，用于启动整个
 
 ### 一些细节  
 - "import"时，在包前面加上"."可以省略包的引用，如**import . "fmt"**，在调用时不用"fmt.Println()"而只需"Println()"  
-- 
+- 由于go的包依赖对路径有严格的要求，用相对路径是不行的，所以要根据本地的工作空间路径做适当修改或者直接将项目移动到合适路径下。  
+- 在一个.go文件中用相对路径打开另一个文件时，.go文件的初路径为其所在包的路径而不包含它本身，如cmd文件夹中的login.go文件的路径为"cmd/"而并非"cmd/login.go"  
+- 在使用"ioutil"包中的"func WriteFile(filename string, data []byte, perm os.ModeAppend) error"函数时，要注意其在每次写之前都要清空文件而不是直接在文件末尾添加data，同时该函数第三个参数的作用是如果file不存在就以perm的权限创建一个空的file。  
