@@ -78,7 +78,7 @@ b上下载即可
         ![](images/li2.png)  
         - 接着通过该信息判断是否有用户登陆（**注意此处需要判空，当信息为空时也返回false**）  
         ![](images/li3.png)  
-    - 接着检查用户名和密码是否正确，若正确，输出"Login successfully!"并调用userLogin函数将username信息写入data/cur_user.txt中；若错误，输出想用的错误信息  
+    - 接着检查用户名和密码是否正确，若正确，输出"Login successfully!"并调用userLogin函数将username信息写入data/cur_user.txt中；若错误，输出相应的错误信息  
         - 若用户名和密码为空：显示"Username and password cannot be empty!"
         - 若用户名不存在：显示"The username does not exist!"  
         - 若密码错误：显示"Wrong password!"  
@@ -104,15 +104,15 @@ b上下载即可
   
 - deleteUser.go，用于删除当前用户  
 命令：agenda deleteUser(只能在登陆状态下使用)  
-参数解释：无
+参数解释：无  
 代码实现：  
-   - 首先，依旧要检查登陆状态，若为非登陆，输出提示信息；若为登陆状态，继续执行下面操作  
+   - 首先，依旧要检查登陆状态，若为非登陆状态，输出提示信息；若为登陆状态，继续执行下面操作  
    ![](images/delete0.png)  
    - 然后要获取当前用户的用户名，获取方式为读取data/cur_user.txt中的信息  
    ![](images/delete1.png)  
    - 同时，还要通过调用ReadUserInfo函数读取data/user.txt文件获取所有用户的信息  
    ![](images/delete2.png)  
-   - 接着，从用户数据库删除当前用户信息，删除方法为将上面得到的用户数据通过User结构体数组存储，遍历数组，找到与前面获得的当前用户名对应的元素，通过**append(append(userInfo[:i], userInfo[i+1:]...))**的巧妙方法将该元素从结构体数组中删除（当然还可以通过遍历该元素之后的所有元素，将它们全部左移一位，最后把数组长度减一，不过相对比较麻烦）  
+   - 接着，从用户数据库删除当前用户信息，删除方法为将上面得到的用户数据通过User结构体数组存储，遍历数组，找到与前面获得的当前用户名对应的元素，通过"append(append(userInfo[:i], userInfo[i+1:]...))"的巧妙方法将该元素从结构体数组中删除（当然还可以通过遍历该元素之后的所有元素，将它们全部左移一位，最后把数组长度减一，不过相对比较麻烦）  
    ![](images/delete3.png)  
    - 最后，还需要更新用户数据库的信息，同时还要退出当前用户  
    ![](images/delete4.png)  
@@ -123,7 +123,7 @@ main.go调用了**agenda/cmd/root.go**中的Execute()函数，用于启动整个
 ![](images/main1.png)  
   
 ### 用户数据存储  
-用户数据存放于data文件夹中，其中user.txt中以json格式存储注册的用户信息，cur_user.txt为当前登陆的用户(初始为空)，若有用户登陆，显示"username"；若当前没有用户登陆，则显示“No user is currently logged in!”  
+用户数据存放于data文件夹中，其中user.txt中以json格式存储注册的用户信息；cur_user.txt为当前登陆的用户信息(初始为空)，若有用户登陆，显示"username"；若当前没有用户登陆，则显示“No user is currently logged in!”  
 ![](images/data0.png)  
   
 关于对用户数据的操作，在entity文件中的userInfo.go中实现：包括了user的基本信息结构体、从user.txt中读取user以及将user信息写进user.txt中.  
@@ -137,7 +137,7 @@ main.go调用了**agenda/cmd/root.go**中的Execute()函数，用于启动整个
 
 
 ### 项目测试  
-首先通过"**go build**"编译agenda，然后就可以直接通过**agenda [cmd]**运行agenda中的命令了
+首先通过"**go build**"编译agenda，然后就可以直接通过agenda [cmd]运行agenda中的命令了
 - 注册用户测试  
 ![](images/re_test0.png)  
 ![](images/re_test1.png)  
@@ -171,3 +171,4 @@ main.go调用了**agenda/cmd/root.go**中的Execute()函数，用于启动整个
 
 ### 一些细节  
 - "import"时，在包前面加上"."可以省略包的引用，如**import . "fmt"**，在调用时不用"fmt.Println()"而只需"Println()"  
+- 
