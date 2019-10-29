@@ -1,38 +1,38 @@
 # Golang 开发CLI程序Agenda(简单版)
 
 ## 安装Golang包cobra  
-直接使用指令*go get -v github.com/spf13/cobra/cobra*  
-然而会出现以下错误：其中有两个依赖文件下载失败，分别为**golang.org/x/text/transfrom**和**golang.org/x/text/unicode/norm**  
+- 使用指令*go get -v github.com/spf13/cobra/cobra*从github上获取cobra包  
+结果会出现以下错误：其中有两个依赖文件下载失败，分别为**golang.org/x/text/transfrom**和**golang.org/x/text/unicode/norm**  
 ![](images/cobra1.png)  
   
-处理办法是进入本地的GO工作空间的src/golang.org/x目录中，直接从github上下载text文件即可  
+- 进入本地的GO工作空间的src/golang.org/x目录中，直接从github上下载text文件即可  
 ![](images/cobra2.png)  
   
-然后用指令**go install github.com/spf13/cobra/cobra**完成cobra的安装  
+- 然后用指令**go install github.com/spf13/cobra/cobra**完成cobra的安装  
+发现还有一个依赖包**golang.org/x/sys/unix**未下载成功，同样的去到本地环境中的相应目录，从githu
+b上下载即可  
 ![](images/cobra3.png)  
-  
-然后发现还有一个依赖包**golang.org/x/sys/unix**未下载成功，同样的去到本地环境中的相应目录，从githu
-b上下载  
 ![](images/cobra4.png)  
 
-重新安装cobra就能成功了  
+- 接着重新安装cobra  
 ![](images/cobra5.png)  
   
-在gowork/src/github.com/user目录下创建一个项目文件夹agenda  
+## 创建Agenda项目  
+- 首先在gowork/src/github.com/user目录下创建一个项目文件夹agenda  
 ![](images/agenda0.png)  
   
-在此文件夹下通过指令**cobra init --pkg-name agenda**初始化一个agenda项目，然后可以通过tree查看此项目的文件树。  
+- 然后在此文件夹下通过指令**cobra init --pkg-name agenda**初始化一个agenda项目，可以通过tree查看此项目初始的文件树。  
 ![](images/agenda1.png)  
   
-然后可以利用cobra，通过指令**cobra add**在cmd目录下添加需要完成的功能，系统会自动添加一个.go文件，我要实现的命令如下：  
-- cobra add register（注册用户）
-- cobra add login（用户登陆）
-- cobra add logout（用户登出）
-- cobra add findUser（查询用户）
-- cobra add deleteUser（删除用户）  
+- 接着可以利用cobra包，通过指令**cobra add**在cmd目录下添加需要完成的功能，系统会自动添加一个.go文件，我要实现的命令如下：  
+    - cobra add register（注册用户）
+    - cobra add login（用户登陆）
+    - cobra add logout（用户登出）
+    - cobra add findUser（查询用户）
+    - cobra add deleteUser（删除用户）  
 ![](images/agenda2.png)  
   
-- 最后再添加一些其他需要实现的功能文件，最终文件树如下  
+- 最后再添加一些其他需要实现的功能文件（后面会一一解释），最终文件树如下  
 ![](images/tree0.png)  
 
 ## Agenda具体实现  
