@@ -39,7 +39,7 @@
    - Basic Authentication
    - OAuth, OAuth2 (支持27个以上的热门网站)
    - JWT *服务器
-   - 通过TLS提供服务时，自动安装和提供来自https://letsencrypt.org的证书
+   - 通过TLS提供服务时，自动安装和提供来自https://letsencrypt.org 的证书
    - 默认为关闭状态
    - 在关闭，错误或中断事件时注册
    - 连接多个服务器，完全兼容 net/http#Server 
@@ -71,9 +71,9 @@
 - 运行测试：go run server.go  
 ![](images/test0.png)  
    - 在浏览器上访问网页(端口8080)  
-      - 输出html
+      - 输出html  
    ![](images/test1.png)  
-      - 输出字符串
+      - 输出字符串  
    ![](images/test2.png)  
       - 输出JSON数据  
    ![](images/test3.png)  
@@ -103,7 +103,7 @@
       5. 最终通过"curl --version"查看curl版本验证是否安装成功  
       ![](images/curl2.png)  
         
-   - 然后通过命令"curl -v https://0.0.0.0:10000/welcome"测试  
+   - 然后通过命令"curl -v https://0.0.0.0:10000/welcome" 测试  
    ![](images/curl3.png)  
    - 测试"curl -v https://0.0.0.0:10000/cloudgo"  
    ![](images/curl4.png)  
@@ -113,7 +113,7 @@
    - 首先仍然要通过命令"sudo yum -y install httpd-tools"安装ab  
    通过"ab -V"查看最终的安装结果如下：
    ![](images/ab0.png)  
-   - 然后通过命令"ab -n 10000 -c 100 http://localhost:8080/welcome"进行压力测试（其中10000表示测试的请求数，100代表并发等级）  
+   - 然后通过命令"ab -n 10000 -c 100 http://localhost:8080/welcome" 进行压力测试（其中10000表示测试的请求数，100代表并发等级）  
    ![](images/ab1.png)  
    ![](images/ab2.png)  
      
@@ -131,7 +131,7 @@
 2.选择简单的库，如 mux 等，通过源码分析、解释它是如何实现扩展的原理，包括一些 golang 程序设计技巧。  
 3.在 docker hub 申请账号，从 github 构建 cloudgo 的 docker 镜像，最后在 Amazon 云容器服务中部署。  
    - 实现 Github - Travis CI - Docker hub - Amazon “不落地”云软件开发流水线  
-   
+
 4.其他 web 开发话题  
 博客地址：
 
