@@ -124,6 +124,7 @@
    - 测试"ab -n 10000 -c 100 http://localhost:8080/hello"  
    ![](images/ab5.png)  
    ![](images/ab6.png)  
+     
 ## 4、扩展要求  
 选择以下一个或多个任务，以博客的形式提交。
 
@@ -133,5 +134,253 @@
    - 实现 Github - Travis CI - Docker hub - Amazon “不落地”云软件开发流水线  
 
 4.其他 web 开发话题  
-博客地址：
+  
+### net/http源码分析  
+  
+#### 4.1 http服务器处理流程
+总的来说，http服务器的作用过程就是用`server（服务端）`处理来自`client（客户端）`的`request`，并向`client`返回`response`。其中，`server`接收`request`需要通过路由（`Multiplexer`）实现，而对`request`的处理以及`response`的产生则是通过其中的`Handler`函数实现（例子中是通过调用HandleFunc函数实现`http`包中默认的`Multiplexer`：`DefautServeMux`）.下图为简单的流程图：  
+![](images/http0.png)    
+
+
+---
+
+#### 4.2 http服务创建
+
+以下面最简单的Golang `http`测试代码为例，创建一个http服务，有两个主要过程：
+   - 注册路由（`DefautServeMux`），即把一个模式（`url`）和对应的处理函数（`handler`）注册到`DefautServeMux`中
+   - 实例化一个server对象，并开启对客户端的监听，对服务端的请求做出响应
+```go
+package main
+
+import(
+   "fmt"
+   "net/http"
+)
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) { // 定义处理器函数
+   fmt.Fprintln(w, "Hello World")
+}
+
+func main() {
+   http.HandleFunc("/", IndexHandler)  // 注册路由
+   http.ListenAndServer("127.0.0.0:8080", nil)  // 监听
+}
+```      
+---
+
+##### 4.2.1 注册路由
+
+因为http包中已经内置了路由：`DefaultServeMux`，所以可以直接调用`http.HandleFunc`函数注册一个处理器函数（`handler`）和对应的模式（`pattern`）到`DefaultServeMux`中。（当然，也可以自定义一个路由器，如：`mux := http.NewServeMux()`）
+
+```go
+func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+    DefaultServeMux.HandleFunc(pattern, handler)
+}
+```
+
+```go
+// NewServeMux allocates and returns a new ServeMux.
+func NewServeMux() *ServeMux { return new(ServeMux) }
+
+// DefaultServeMux is the default ServeMux used by Serve.
+var DefaultServeMux = &defaultServeMux
+
+var defaultServeMux ServeMux
+```  
+
+由上面代码可以看到，`DefaultServeMux`其实就是一个默认的`ServeMux`（多路复用路由器）的实例，`ServeMux`的结构如下：  
+
+```go
+type ServeMux struct {
+    mu    sync.RWMutex  // 并发处理涉及到的锁
+    m     map[string]muxEntry // map的key(string)为一些url模式，value是一个muxEntry
+    hosts bool // 判断是否在任意的规则下带有host信息
+}
+```  
+
+`muxEntry`的结构如下：  
+
+```go
+type muxEntry struct {
+    explicit bool // 判断是否精确匹配
+    h        Handler // 路由器匹配的Handler
+    pattern  string  // 路由器匹配的url模式
+}
+```
+同时，`DefaultServeMux`中的`HandleFunc(pattern, handler)`方法实际是定义在`ServeMux`中的：  
+
+```go
+func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+	mux.Handle(pattern, HandlerFunc(handler))
+}
+```
+
+其中，`HandlerFunc(handler)`是一个转换函数类型，即实现了`Handler`接口的`ServeHTTP`方法,转变成了一个handler处理器。任何结构体，只要实现了ServeHTTP方法，这个结构就可以称之为handler对象。ServeMux会使用handler并调用其ServeHTTP方法处理请求并返回响应。  
+
+```go
+// The HandlerFunc type is an adapter to allow the use of ordinary functions as HTTP handlers. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a Handler that calls f.
+type HandlerFunc func(ResponseWriter, *Request)
+
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+	f(w, r)
+}
+```  
+```go
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+```
+除此之外，上面的函数还调用了`ServeMux`的`Handle`方法(`mux.Handle`)，将`pattern`和`handler`函数做了一个`map`映射。mux中的Handle函数如下：
+
+```go
+// Handle registers the handler for the given pattern.
+// If a handler already exists for pattern, Handle panics.
+func (mux *ServeMux) Handle(pattern string, handler Handler) {
+    mux.mu.Lock()
+    defer mux.mu.Unlock()
+    if pattern == "" {
+        panic("http: invalid pattern " + pattern)
+    }
+    if handler == nil {
+        panic("http: nil handler")
+    }
+    if mux.m[pattern].explicit { // 如果pattern与handler匹配
+        panic("http: multiple registrations for " + pattern)
+    }
+
+    if mux.m == nil {   // 如果map不存在，则建立map
+        mux.m = make(map[string]muxEntry)
+    }
+    // 判断pattern与handler是否精确匹配
+    mux.m[pattern] = muxEntry{explicit: true, h: handler, pattern: pattern}
+
+    if pattern[0] != '/' {
+        mux.hosts = true
+    }
+
+    n := len(pattern)
+    if n > 0 && pattern[n-1] == '/' && !mux.m[pattern[0:n-1]].explicit {
+
+        path := pattern
+        if pattern[0] != '/' {
+            path = pattern[strings.Index(pattern, "/"):]
+        }
+        url := &url.URL{Path: path}
+        mux.m[pattern[0:n-1]] = muxEntry{
+            h: RedirectHandler(url.String(),StatusMovedPermanently), pattern: pattern
+        }
+	}
+}    
+```
+
+由上面代码可以看到，`Handle函数`的作用是把一个URL模式(`pattern`)和与其匹配的处理函数(`handler`)绑定到`muxEntry`的`map`上，这个`map`就相当于一个`pattern`和`handler`的匹配表。这个表是在`ServeMux`结构中的，而前面提到了`DefaultServeMux`是`ServeMux`的一个实例，因此，调用`HandleFunc(pattern, handler)`方法最终`pattern`和其对应的`handler`绑定到了`DefautServeMux`中，这就代表路由注册完毕了。
+
+---
+##### 4.2.2 监听并处理请求
+
+直接通过调用`ListenAndServe`函数监听，函数代码如下：
+
+```go
+func ListenAndServe(addr string, handler Handler) error {
+	server := &Server{Addr: addr, Handler: handler}
+	return server.ListenAndServe()
+}
+```  
+可以看到，函数先实例化了一个Server对象server（Server定义了`http`服务端运行的一些参数），其结构体如下：
+```go
+type Server struct {
+   Addr           string        // 监听的TCP地址，如果为空字符串会使用":http"
+   Handler        Handler       // 处理器，默认为DefaultServeMux中的Handler
+   ReadTimeout    time.Duration // 读request允许的最长持续时间
+   WriteTimeout   time.Duration // 写response允许的最长持续时间
+   MaxHeaderBytes int           // 请求的头域最大长度，如为0则用DefaultMaxHeaderBytes
+   TLSConfig      *tls.Config   // 可选的TLS配置，用于ListenAndServeTLS方法
+
+   TLSNextProto map[string]func(*Server, *tls.Conn, Handler)  // TLSNextProto（可选地）指定一个函数来在一个NPN型协议升级出现时接管TLS连接的所有权。
+
+   ConnState func(net.Conn, ConnState) //用于指定一个可选的回调函数，该函数会在一个与客户端的连接改变状态时被调用
+
+   ErrorLog *log.Logger // ErrorLog指定一个可选的日志记录器，用于记录接收连接时的错误和处理器不正常的行为
+}
+```  
+然后，`ListenAndServe`通过调用`(Server) ListenAndServe()`函数对服务器地址进行监听，函数代码如下：  
+
+```go
+func (srv Server) ListenAndServe() error {
+	addr := srv.Addr
+	if addr == "" { // 如果地址为空，则使用":http"
+		addr = ":http"
+	}
+	ln, err := net.Listen("tcp", addr) // 调用net.Listen函数监听地址addr
+	if err != nil {
+		return err
+	}
+	return srv.Serve(tcpKeepAliveListener{ln.(net.TCPListener)}) // 接受客户端的request
+}
+```
+其中，`net.Listen`函数的源码如下，传入参数为一个网络环境network（`tcp`、`tcp4`、`unix`等流网络）和一个监听地址address，返回一个`Listener`和错误处理`error`  
+
+```go  
+func Listen(network, address string) (Listener, error) {
+	addrs, err := DefaultResolver.resolveAddrList(context.Background(), "listen", network, address, nil)
+	if err != nil {
+		return nil, &OpError{Op: "listen", Net: network, Source: nil, Addr: nil, Err: err}
+	}
+	var l Listener
+	switch la := addrs.first(isIPv4).(type) {
+	case *TCPAddr:
+		l, err = ListenTCP(network, la)
+	case *UnixAddr:
+		l, err = ListenUnix(network, la)
+	default:
+		return nil, &OpError{Op: "listen", Net: network, Source: nil, Addr: la, Err: &AddrError{Err: "unexpected address type", Addr: address}}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+```
+最后调用`srv.Serve(tcpKeepAliveListener{ln.(net.TCPListener)})`函数来接收`Client`的`request`，其源码如下：  
+```go
+func (srv *Server) Serve(l net.Listener) error {
+	defer l.Close()
+	var tempDelay time.Duration // how long to sleep on accept failure
+	for {
+		rw, e := l.Accept() //通过Listener接收请求
+		if e != nil {
+			if ne, ok := e.(net.Error); ok && ne.Temporary() {
+				if tempDelay == 0 {
+					tempDelay = 5 * time.Millisecond
+				} else {
+					tempDelay *= 2
+				}
+				if max := 1 * time.Second; tempDelay > max {
+					tempDelay = max
+				}
+				log.Printf("http: Accept error: %v; retrying in %v", e, tempDelay)
+				time.Sleep(tempDelay)
+				continue
+			}
+			return e
+		}
+		tempDelay = 0
+		c, err := srv.newConn(rw) // 通过newConn函数创建一个Conn。Conn是net包里面的一个接口，代表通用的面向流的网络连接。多个线程可能会同时调用同一个Conn的方法。
+		if err != nil {
+			continue
+		}
+		go c.serve() 
+	}
+}
+```
+
+---  
+最后的最后，看了一篇博客（[链接]("https://blog.csdn.net/lengyuezuixue/article/details/79094323")）给出的Golang `http`服务的整体框架，感觉很nice，在这里贴出来。  
+  
+![](images/6.png)
+
+
+
 
