@@ -4,6 +4,7 @@
 - 基于现有 web 库，编写一个简单 web 应用类似 cloudgo。
 - 使用 curl 工具访问 web 程序
 - 对 web 执行压力测试  
+
 ## 2、任务要求  
 - 编程 web 服务程序 类似 cloudgo 应用。
    - 要求有详细的注释
@@ -377,7 +378,7 @@ func (srv *Server) Serve(l net.Listener) error {
 ```
 
 ---  
-最后的最后，看了一篇博客（[链接]("https://blog.csdn.net/lengyuezuixue/article/details/79094323")）给出的Golang `http`服务的整体框架，感觉很nice，在这里贴出来。  
+最后的最后，看了一篇博客（[链接](https://blog.csdn.net/lengyuezuixue/article/details/79094323)）给出的Golang `http`服务的整体框架，感觉很nice，在这里贴出来。  
   
 ![](images/6.png)
 
